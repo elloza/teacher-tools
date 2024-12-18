@@ -23,15 +23,15 @@ if __name__ == "__main__":
     """
     ## Descripción de las herramientas disponibles:
 
-    ### 📝 [Join Excel Files](JoinExcel)
+    ### 📝 [Join Excel Files](teacher-tools/JoinExcel)
     Esta herramienta permite unir dos archivos de Excel en función de una columna común. 
     Puedes seleccionar las columnas de unión de cada archivo y descargar el archivo combinado.
 
-    ### 📝 [Only Last Answer](OnlyLastAnswer)
+    ### 📝 [Only Last Answer](teacher-tools/OnlyLastAnswer)
     Esta herramienta procesa un archivo de Excel para obtener solo la última respuesta de cada identificador único. 
     Puedes seleccionar la columna de identificación y la columna de tiempo para realizar el filtrado.
 
-    ### 📝 [Lectora to Studium Excel Tool](StudiumExcelTool)
+    ### 📝 [Lectora to Studium Excel Tool](teacher-tools/StudiumExcelTool)
     Esta herramienta convierte los datos de la lectora en un archivo de Excel compatible con Studium (Moodle). 
     Necesitarás subir varios archivos, incluyendo los resultados de la lectora y un archivo de Excel de Studium, 
     y configurar los parámetros de corrección.
