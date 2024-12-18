@@ -5,6 +5,14 @@ import os
 from pathlib import Path
 from fuzzywuzzy import process
 
+# Configure max upload size to 5GB
+st.set_page_config(
+    page_title="Verificador de Entregas",
+    layout="wide",
+    initial_sidebar_state="expanded",
+)
+st.config.set_option('server.maxUploadSize', 5120)
+
 def check_submissions(excel_file, zip_file, file_types, name_column, last_name_column, delivery_column='Entregado'):
     # Create tmp directory if it doesn't exist
     tmp_dir = Path('tmp')
