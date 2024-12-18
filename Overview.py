@@ -35,5 +35,8 @@ if __name__ == "__main__":
     Esta herramienta convierte los datos de la lectora en un archivo de Excel compatible con Studium (Moodle). 
     Necesitarás subir varios archivos, incluyendo los resultados de la lectora y un archivo de Excel de Studium, 
     y configurar los parámetros de corrección.
+
+    ### 📝 [Submission Verifier](teacher-tools/SubmissionVerifier)
+
     """
   )
