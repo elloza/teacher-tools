@@ -17,6 +17,9 @@ http = urllib3.PoolManager()
 # Título de la aplicación
 st.title("Scraper de Participantes y Registros - Studium Moodle")
 
+# Aviso sobre limitaciones de CORS
+st.warning("⚠️ AVISO: Esta herramienta solo funciona en la versión desktop debido a limitaciones de CORS.")
+
 # URLs y plantillas
 base_url = "https://studium24.usal.es/user/index.php?page=0&perpage=5000&contextid=0&id={}&newcourse"
 log_url_template = "https://studium24.usal.es/report/log/index.php?sesskey={}&download=csv&id={}&user={}&modid=&chooselog=1&logreader=logstore_standard"
