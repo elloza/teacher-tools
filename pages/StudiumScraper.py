@@ -34,7 +34,7 @@ auth_token = st.text_input("MDL_SSP_SessID", type="password")
 course_id = st.text_input("ID del curso", placeholder="Ejemplo: 2400874")
 
 # Mostrar imagen de ejemplo de cookies
-#st.image("img/cookies.png", caption="Ejemplo de cookies")
+st.image("img/cookies.png", caption="Ejemplo de cookies")
 
 # Explicación de las variables necesarias
 st.markdown("""
