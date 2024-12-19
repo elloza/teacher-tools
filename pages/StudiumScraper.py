@@ -1,5 +1,4 @@
 import os
-
 from pypdf import PdfReader, PdfWriter
 import streamlit as st
 import requests
@@ -12,6 +11,9 @@ import io
 import tempfile
 from utils.ScraperUtils import generate_contribution_chart, generate_pdf_report, download_participant_logs
 import zipfile
+import urllib3
+
+http = urllib3.PoolManager()
 
 # Título de la aplicación
 st.title("Scraper de Participantes y Registros - Studium Moodle")
@@ -48,11 +50,11 @@ st.markdown("""
 # Botón para extraer participantes
 if st.button("Extraer Participantes"):
     if moodle_session and auth_token and course_id:
-        cookies = {"MoodleSession": moodle_session}
-        response = requests.get(base_url.format(course_id), cookies=cookies)
+        headers = {"Cookie": f"MoodleSession={moodle_session}"}
+        response = http.request("GET", base_url.format(course_id), headers=headers)
 
-        if response.status_code == 200:
-            soup = BeautifulSoup(response.content, "html.parser")
+        if response.status == 200:
+            soup = BeautifulSoup(response.data, "html.parser")
             tbody = soup.find("table", class_="generaltable").find("tbody")
             rows = tbody.find_all("tr")
 
@@ -73,7 +75,7 @@ if st.button("Extraer Participantes"):
             else:
                 st.warning("No se encontraron participantes.")
         else:
-            st.error(f"Error: {response.status_code}")
+            st.error(f"Error: {response.status}")
     else:
         st.error("Completa todos los campos.")
 

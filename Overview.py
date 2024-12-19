@@ -47,8 +47,10 @@ if __name__ == "__main__":
     con un 1 si se ha encontrado algún fichero de alguno de los tipos introducidos y 0 en caso contrario. ✅❌
 
     ### 📝 Studium Scraper
-    Esta herramienta permite extraer la lista de participantes de un curso de Moodle en Studium. 📊
-    Necesitarás introducir las cookies de sesión de Moodle y el ID del curso para extraer los participantes. 🍪
+    Esta herramienta permite extraer la lista de participantes de un curso de Moodle en Studium y generar un informe como un timeline
+    de github a partir de sus registros de actividad. 📊
+
+    Necesitarás iniciar sesión con tu cuenta e introducir las cookies de sesión de Moodle y el ID del curso para extraer los participantes y sus registros. 🍪
 
     """
   )

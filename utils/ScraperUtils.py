@@ -1,4 +1,3 @@
-import requests
 import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
@@ -10,14 +9,18 @@ import os
 from reportlab.lib.pagesizes import A4
 from reportlab.pdfgen import canvas
 from reportlab.lib.utils import ImageReader
+import urllib3
+
+http = urllib3.PoolManager()
 
 def download_participant_logs(auth_token, course_id, user_id, moodle_session):
     log_url_template = "https://studium24.usal.es/report/log/index.php?sesskey={}&download=csv&id={}&user={}&modid=&chooselog=1&logreader=logstore_standard"
     log_url = log_url_template.format(auth_token, course_id, user_id)
-    response = requests.get(log_url, cookies={"MoodleSession": moodle_session})
-    if response.status_code == 200:
+    headers = {"Cookie": f"MoodleSession={moodle_session}"}
+    response = http.request("GET", log_url, headers=headers)
+    if response.status == 200:
         try:
-            df = pd.read_csv(io.StringIO(response.text))
+            df = pd.read_csv(io.StringIO(response.data.decode('utf-8')))
             return df
         except Exception as e:
             return None

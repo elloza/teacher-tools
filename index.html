@@ -10,16 +10,16 @@
     <title>Teacher tools</title>
     <link
       rel="stylesheet"
-      href="https://cdn.jsdelivr.net/npm/@stlite/mountable@0.69.2/build/stlite.css"
+      href="https://cdn.jsdelivr.net/npm/@stlite/mountable/build/stlite.css"
     />
   </head>
   <body>
     <div id="root"></div>
-    <script src="https://cdn.jsdelivr.net/npm/@stlite/mountable@0.69.2/build/stlite.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@stlite/mountable/build/stlite.js"></script>
     <script>
       stlite.mount(
         {
-          requirements: ["pandas", "fuzzywuzzy","asyncio","zip-files","openpyxl","beautifulsoup4","matplotlib","pypdf","reportlab","requests"],
+          requirements: ["pandas", "fuzzywuzzy","asyncio","zip-files","openpyxl","beautifulsoup4","matplotlib","pypdf","reportlab","urllib3"],
           entrypoint: "Overview.py",
           files: { 
             "Overview.py": {
