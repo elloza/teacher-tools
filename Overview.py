@@ -46,5 +46,9 @@ if __name__ == "__main__":
     para comprobar si en sus entregas se incluye algún fichero con alguna de las extensiones especificadas. 📁 Se añade una columna
     con un 1 si se ha encontrado algún fichero de alguno de los tipos introducidos y 0 en caso contrario. ✅❌
 
+    ### 📝 Studium Scraper
+    Esta herramienta permite extraer la lista de participantes de un curso de Moodle en Studium. 📊
+    Necesitarás introducir las cookies de sesión de Moodle y el ID del curso para extraer los participantes. 🍪
+
     """
   )
