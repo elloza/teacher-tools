@@ -19,7 +19,7 @@
     <script>
       stlite.mount(
   {
-    requirements: ["pandas", "fuzzywuzzy","asyncio","zip-files","openpyxl"],
+    requirements: ["pandas", "fuzzywuzzy","asyncio","zip-files","openpyxl","beautifulsoup4","matplotlib","pypdf"],
     entrypoint: "Overview.py",
     files: { 
 "Overview.py": {
@@ -40,9 +40,6 @@
 "utils/StudiumExcelToolUtils.py": {
     url: "https://raw.githubusercontent.com/elloza/teacher-tools/main/utils/StudiumExcelToolUtils.py"
 }
-    },
-    streamlitConfig: {
-        "server.maxUploadSize": "5000",
     },
 },
   document.getElementById("root")
