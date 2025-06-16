@@ -89,7 +89,7 @@ if st.button("🚀 Procesar"):
 
         df_txt = leer_archivo_txt(fichero_lectora_txt, prefijo_columna)
         df_excel = leer_archivo_excel(fichero_xlsx_studium)
-        df_dat = leer_y_procesar_fichero_DAT(fichero_lectora_lectura, fichero_lectora_solucion, num_preguntas, descuento, prefijo_columna) # type: ignore
+        df_dat = leer_y_procesar_fichero_DAT(fichero_lectora_lectura, fichero_lectora_solucion, num_preguntas, descuento, prefijo_columna, num_pregunta_inicio, num_pregunta_fin) # type: ignore
         df_combinado, no_encontrados = combinar_datos(df_txt, df_excel, df_dat, umbral, base_nota, prefijo_columna, num_preguntas)
         
         escribir_nuevo_excel(df_combinado, archivo_salida)

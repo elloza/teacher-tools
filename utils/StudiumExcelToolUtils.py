@@ -46,7 +46,7 @@ def comparar_identificaciones(identificacion, lista_ids, umbral):
         return None
 
 # Función para leer y procesar el fichero DAT
-def leer_y_procesar_fichero_DAT(uploaded_file_lecturas,uploaded_file_soluciones, num_preguntas=10, descuento=0.33, prefijo_columna="Test"):
+def leer_y_procesar_fichero_DAT(uploaded_file_lecturas,uploaded_file_soluciones, num_preguntas=10, descuento=0.33, prefijo_columna="Test", num_pregunta_inicio=1, num_pregunta_fin=10):
     datos = []
 
     soluciones_test = dict()
@@ -54,8 +54,13 @@ def leer_y_procesar_fichero_DAT(uploaded_file_lecturas,uploaded_file_soluciones,
     stringio = StringIO(uploaded_file_soluciones.getvalue().decode('utf-8'))
     lineas_sol = stringio.readlines()
 
+    # Calcular el rango de preguntas (usuario cuenta desde 1, pero internamente desde 0)
+    inicio_pos = 17 + (num_pregunta_inicio - 1)
+    fin_pos = 17 + num_pregunta_fin
+    num_preguntas_rango = num_pregunta_fin - num_pregunta_inicio + 1
+
     for linea in lineas_sol:
-        soluciones_test[int(linea[14:17])] = [int(linea[i]) for i in range(17, 17+num_preguntas)]
+        soluciones_test[int(linea[14:17])] = [int(linea[i]) for i in range(inicio_pos, fin_pos)]
 
     stringio = StringIO(uploaded_file_lecturas.getvalue().decode('utf-8'))
     lineas_lecturas = stringio.readlines()
@@ -64,23 +69,23 @@ def leer_y_procesar_fichero_DAT(uploaded_file_lecturas,uploaded_file_soluciones,
         dni = linea[6:14]
         dni = dni.zfill(9)
         opcion = int(linea[14:17])
-        respuestas = [int(linea[i]) for i in range(17, 17+num_preguntas)]
+        respuestas = [int(linea[i]) for i in range(inicio_pos, fin_pos)]
         respuestas_correctas = soluciones_test[opcion]
         # numero de respuestas sin marcar (valor 0)
         respuestas_no_contestadas = respuestas.count(0)
         # numero de respuestas correctas
-        respuestas_correctas = sum([1 for i in range(num_preguntas) if respuestas[i] == respuestas_correctas[i]])
+        respuestas_correctas_count = sum([1 for i in range(num_preguntas_rango) if respuestas[i] == respuestas_correctas[i]])
         # numero de respuestas incorrectas cuyo valor es distinto de 0 y de la respuesta correcta
-        respuestas_incorrectas = sum([1 for i in range(num_preguntas) if respuestas[i] != 0 and respuestas[i] != soluciones_test[opcion][i]])
+        respuestas_incorrectas = sum([1 for i in range(num_preguntas_rango) if respuestas[i] != 0 and respuestas[i] != soluciones_test[opcion][i]])
         # Nota numero de respuestas correctas - numero de respuestas incorrectas * descuento
-        nota = respuestas_correctas - respuestas_incorrectas * descuento
+        nota = respuestas_correctas_count - respuestas_incorrectas * descuento
         # Respuestas poniendo 0 a las no contestadas -descuento a las incorrectas y 1 a las correctas
-        respuestas_valores = [0 if respuestas[i] == 0 else 1 if respuestas[i] == soluciones_test[opcion][i] else -descuento for i in range(num_preguntas)]
+        respuestas_valores = [0 if respuestas[i] == 0 else 1 if respuestas[i] == soluciones_test[opcion][i] else -descuento for i in range(num_preguntas_rango)]
 
         # Juntar toda la información en una lista
-        datos.append([dni, opcion, nota,respuestas_correctas,respuestas_incorrectas,respuestas_no_contestadas] + respuestas + respuestas_valores)
+        datos.append([dni, opcion, nota,respuestas_correctas_count,respuestas_incorrectas,respuestas_no_contestadas] + respuestas + respuestas_valores)
 
-    columnas = [f'{prefijo_columna}_DNI', f'{prefijo_columna}_Opción', f'{prefijo_columna}_Nota',f'{prefijo_columna}_Respuestas correctas',f'{prefijo_columna}_Respuestas incorrectas',f'{prefijo_columna}_Respuestas no contestadas'] + [f'{prefijo_columna}_Pregunta {i}' for i in range(1, num_preguntas+1) ] + [f'{prefijo_columna}_Pregunta {i} valor' for i in range(1, num_preguntas+1) ]
+    columnas = [f'{prefijo_columna}_DNI', f'{prefijo_columna}_Opción', f'{prefijo_columna}_Nota',f'{prefijo_columna}_Respuestas correctas',f'{prefijo_columna}_Respuestas incorrectas',f'{prefijo_columna}_Respuestas no contestadas'] + [f'{prefijo_columna}_Pregunta {i}' for i in range(num_pregunta_inicio, num_pregunta_fin+1) ] + [f'{prefijo_columna}_Pregunta {i} valor' for i in range(num_pregunta_inicio, num_pregunta_fin+1) ]
     return pd.DataFrame(datos, columns=columnas)
 
 # Función para combinar los datos
