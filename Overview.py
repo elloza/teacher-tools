@@ -52,5 +52,11 @@ if __name__ == "__main__":
 
     Necesitarás iniciar sesión con tu cuenta e introducir las cookies de sesión de Moodle y el ID del curso para extraer los participantes y sus registros. 🍪
 
+    ### 📝 Studium Excel 2 Actas
+    Esta herramienta permite cruzar datos entre dos archivos Excel: uno de Studium (Moodle) con las notas y otro de la aplicación de actas de la USAL. 📋
+
+    El cruce se realiza automáticamente por nombres y apellidos usando matching inteligente, y los datos se copian al Excel de actas manteniendo
+    su formato original (colores, fórmulas, etc.). ✨ Normalmente se usa para llevar las notas numéricas de Studium a las actas oficiales. 📊
+
     """
   )
