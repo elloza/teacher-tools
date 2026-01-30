@@ -224,10 +224,12 @@ if uploaded_studium is not None and uploaded_actas is not None:
                     value = df_studium.loc[best_match_idx, studium_data_col]
                     studium_name = df_studium.loc[best_match_idx, 'nombre_completo']
 
-                    # Verificar si el valor está vacío o es NaN -> poner "NP"
+                    # Verificar si el valor está vacío o es NaN
                     if pd.isna(value) or (isinstance(value, str) and value.strip() == ''):
+                        # Columna numérica vacía, NP en la columna de la derecha (texto)
+                        ws.cell(row=excel_row, column=actas_data_col_idx, value=None)
+                        ws.cell(row=excel_row, column=actas_data_col_idx + 1, value="NP")
                         value = "NP"
-                        ws.cell(row=excel_row, column=actas_data_col_idx, value="NP")
                     else:
                         # Si es numérico, redondear a 1 decimal y escribir como número
                         try:
@@ -246,9 +248,10 @@ if uploaded_studium is not None and uploaded_actas is not None:
                         'Match': '✅'
                     })
                 else:
-                    # No hay match -> poner "NP"
+                    # No hay match -> columna numérica vacía, NP en la columna de la derecha
                     not_matched += 1
-                    ws.cell(row=excel_row, column=actas_data_col_idx, value="NP")
+                    ws.cell(row=excel_row, column=actas_data_col_idx, value=None)
+                    ws.cell(row=excel_row, column=actas_data_col_idx + 1, value="NP")
                     match_details.append({
                         'Actas': student_name,
                         'Studium': 'NO ENCONTRADO',
