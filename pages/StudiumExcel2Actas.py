@@ -7,6 +7,16 @@ import re
 
 st.set_page_config(page_title="Studium Excel 2 Actas", page_icon="📝")
 
+# Inicializar session_state para persistir resultados
+if 'processing_done' not in st.session_state:
+    st.session_state.processing_done = False
+if 'output_file' not in st.session_state:
+    st.session_state.output_file = None
+if 'match_details' not in st.session_state:
+    st.session_state.match_details = []
+if 'stats' not in st.session_state:
+    st.session_state.stats = {'total': 0, 'matched': 0, 'not_matched': 0}
+
 st.title('Studium Excel 2 Actas')
 st.write("""
 Esta herramienta permite cruzar datos entre dos archivos Excel:
@@ -140,31 +150,25 @@ if uploaded_actas is not None:
 
 # Configuración adicional
 st.header("3. Configuración")
-col1, col2 = st.columns(2)
-
-with col1:
-    threshold = st.slider(
-        "Umbral de similitud (%)",
-        min_value=50,
-        max_value=100,
-        value=70,
-        help="Porcentaje mínimo de similitud para considerar un match válido"
-    )
-
-with col2:
-    round_decimals = st.number_input(
-        "Redondear a decimales",
-        min_value=0,
-        max_value=4,
-        value=1,
-        help="Número de decimales para redondear las notas"
-    )
+threshold = st.slider(
+    "Umbral de similitud (%)",
+    min_value=50,
+    max_value=100,
+    value=70,
+    help="Porcentaje mínimo de similitud para considerar un match válido"
+)
+st.caption("Las notas se redondean automáticamente a 1 decimal en formato numérico.")
 
 # Botón para procesar
 if uploaded_studium is not None and uploaded_actas is not None:
     if st.button('Procesar y cruzar datos', type="primary"):
-        with st.spinner('Procesando...'):
+        # Usar spinner con mensaje claro de carga
+        with st.spinner('🔄 Procesando datos... Por favor espera.'):
+            # Barra de progreso para feedback visual
+            progress_bar = st.progress(0, text="Iniciando procesamiento...")
+
             # Crear nombres completos de Studium
+            progress_bar.progress(10, text="Preparando datos de Studium...")
             df_studium['nombre_completo'] = (
                 df_studium[studium_nombre_col].astype(str) + ' ' +
                 df_studium[studium_apellidos_col].astype(str)
@@ -177,6 +181,7 @@ if uploaded_studium is not None and uploaded_actas is not None:
             ]
 
             # Cargar el workbook original de actas para mantener el formato
+            progress_bar.progress(20, text="Cargando Excel de Actas...")
             uploaded_actas.seek(0)  # Volver al inicio del archivo
             wb = load_workbook(uploaded_actas)
             ws = wb.active
@@ -198,27 +203,42 @@ if uploaded_studium is not None and uploaded_actas is not None:
             not_matched = 0
             match_details = []
 
+            progress_bar.progress(30, text="Cruzando datos de estudiantes...")
+
             # Procesar cada estudiante de actas
-            for row_idx, row in df_actas.iterrows():
+            for i, (row_idx, row) in enumerate(df_actas.iterrows()):
                 student_name = row[actas_nombre_col]
+
+                # Actualizar progreso
+                progress_pct = 30 + int((i / total_students) * 60)
+                progress_bar.progress(progress_pct, text=f"Procesando estudiante {i+1} de {total_students}...")
 
                 # Buscar el mejor match
                 best_match_idx = find_best_match(student_name, studium_names, threshold)
 
+                # Posición en Excel (row_idx + 2 porque: +1 por ser 1-indexed, +1 por el header)
+                excel_row = row_idx + 2
+
                 if best_match_idx is not None:
                     # Obtener el valor de Studium
                     value = df_studium.loc[best_match_idx, studium_data_col]
+                    studium_name = df_studium.loc[best_match_idx, 'nombre_completo']
 
-                    # Redondear si es numérico
-                    if pd.notna(value) and isinstance(value, (int, float)):
-                        value = round(float(value), round_decimals)
-
-                    # Escribir en el Excel (row_idx + 2 porque: +1 por ser 1-indexed, +1 por el header)
-                    excel_row = row_idx + 2
-                    ws.cell(row=excel_row, column=actas_data_col_idx, value=value)
+                    # Verificar si el valor está vacío o es NaN -> poner "NP"
+                    if pd.isna(value) or (isinstance(value, str) and value.strip() == ''):
+                        value = "NP"
+                        ws.cell(row=excel_row, column=actas_data_col_idx, value="NP")
+                    else:
+                        # Si es numérico, redondear a 1 decimal y escribir como número
+                        try:
+                            numeric_value = float(value)
+                            value = round(numeric_value, 1)
+                            ws.cell(row=excel_row, column=actas_data_col_idx, value=value)
+                        except (ValueError, TypeError):
+                            # Si no es convertible a número, escribir tal cual
+                            ws.cell(row=excel_row, column=actas_data_col_idx, value=value)
 
                     matched += 1
-                    studium_name = df_studium.loc[best_match_idx, 'nombre_completo']
                     match_details.append({
                         'Actas': student_name,
                         'Studium': studium_name,
@@ -226,62 +246,89 @@ if uploaded_studium is not None and uploaded_actas is not None:
                         'Match': '✅'
                     })
                 else:
+                    # No hay match -> poner "NP"
                     not_matched += 1
+                    ws.cell(row=excel_row, column=actas_data_col_idx, value="NP")
                     match_details.append({
                         'Actas': student_name,
                         'Studium': 'NO ENCONTRADO',
-                        'Valor': '',
+                        'Valor': 'NP',
                         'Match': '❌'
                     })
 
             # Guardar el workbook modificado en memoria
+            progress_bar.progress(95, text="Generando archivo Excel...")
             output = io.BytesIO()
             wb.save(output)
             output.seek(0)
 
-            # Mostrar resultados
-            st.success('¡Procesamiento completado!')
+            progress_bar.progress(100, text="¡Completado!")
 
-            col1, col2, col3 = st.columns(3)
-            with col1:
-                st.metric("Total estudiantes", total_students)
-            with col2:
-                st.metric("Coincidencias", matched)
-            with col3:
-                st.metric("No encontrados", not_matched)
+            # Guardar en session_state para persistir después de la recarga
+            st.session_state.processing_done = True
+            st.session_state.output_file = output.getvalue()
+            st.session_state.match_details = match_details
+            st.session_state.stats = {
+                'total': total_students,
+                'matched': matched,
+                'not_matched': not_matched
+            }
 
-            # Mostrar detalles de los matches
-            st.subheader("Detalle de coincidencias")
-            df_matches = pd.DataFrame(match_details)
+# Mostrar resultados si hay datos procesados (persiste después de descargar)
+if st.session_state.processing_done:
+    st.success('¡Procesamiento completado!')
 
-            # Filtros
-            filter_option = st.radio(
-                "Mostrar:",
-                ["Todos", "Solo coincidencias", "Solo no encontrados"],
-                horizontal=True
-            )
+    col1, col2, col3 = st.columns(3)
+    with col1:
+        st.metric("Total estudiantes", st.session_state.stats['total'])
+    with col2:
+        st.metric("Coincidencias", st.session_state.stats['matched'])
+    with col3:
+        st.metric("No encontrados", st.session_state.stats['not_matched'])
 
-            if filter_option == "Solo coincidencias":
-                df_matches = df_matches[df_matches['Match'] == '✅']
-            elif filter_option == "Solo no encontrados":
-                df_matches = df_matches[df_matches['Match'] == '❌']
+    # Mostrar detalles de los matches
+    st.subheader("Detalle de coincidencias")
+    df_matches = pd.DataFrame(st.session_state.match_details)
 
-            st.dataframe(df_matches, use_container_width=True)
+    # Filtros
+    filter_option = st.radio(
+        "Mostrar:",
+        ["Todos", "Solo coincidencias", "Solo no encontrados"],
+        horizontal=True,
+        key="filter_results"
+    )
 
-            # Botón de descarga
-            st.download_button(
-                label='📥 Descargar Excel de Actas actualizado',
-                data=output,
-                file_name='actas_actualizado.xlsx',
-                mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
-            )
+    df_filtered = df_matches.copy()
+    if filter_option == "Solo coincidencias":
+        df_filtered = df_filtered[df_filtered['Match'] == '✅']
+    elif filter_option == "Solo no encontrados":
+        df_filtered = df_filtered[df_filtered['Match'] == '❌']
 
-            # Advertencias
-            if not_matched > 0:
-                st.warning(
-                    f"⚠️ {not_matched} estudiante(s) no se encontraron en el Excel de Studium. "
-                    "Revisa los nombres manualmente o ajusta el umbral de similitud."
-                )
+    st.dataframe(df_filtered, use_container_width=True)
+
+    # Botón de descarga (fuera del bloque del botón para evitar recarga)
+    st.download_button(
+        label='📥 Descargar Excel de Actas actualizado',
+        data=st.session_state.output_file,
+        file_name='actas_actualizado.xlsx',
+        mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+        key="download_result"
+    )
+
+    # Advertencias
+    if st.session_state.stats['not_matched'] > 0:
+        st.warning(
+            f"⚠️ {st.session_state.stats['not_matched']} estudiante(s) no se encontraron en el Excel de Studium. "
+            "Revisa los nombres manualmente o ajusta el umbral de similitud."
+        )
+
+    # Botón para limpiar y procesar de nuevo
+    if st.button("🔄 Limpiar y procesar nuevos archivos", type="secondary"):
+        st.session_state.processing_done = False
+        st.session_state.output_file = None
+        st.session_state.match_details = []
+        st.session_state.stats = {'total': 0, 'matched': 0, 'not_matched': 0}
+        st.rerun()
 
 st.markdown("---")
 st.info("""
