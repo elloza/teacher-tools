@@ -1,7 +1,7 @@
 import streamlit as st
 import pandas as pd
 
-from utils.StudiumExcelToolUtils import combinar_datos, escribir_nuevo_excel, leer_archivo_excel, leer_archivo_txt, leer_y_procesar_fichero_DAT
+from utils.StudiumExcelToolUtils import combinar_datos, escribir_nuevo_excel_bytes, leer_archivo_excel, leer_archivo_txt, leer_y_procesar_fichero_DAT, reordenar_columnas
 
 st.set_page_config(page_title = "Lectora StudiumExcel", page_icon = "📝")
 
@@ -62,6 +62,17 @@ base_nota = st.number_input("📏 Base en la que se quiere la columna Nota", min
 # Nombre del archivo de salida
 archivo_salida = st.text_input("💾 Nombre del archivo de salida", value="Salida.xlsx")
 
+# Inicializar session_state para mantener los resultados
+if 'resultado_procesado' not in st.session_state:
+    st.session_state.resultado_procesado = False
+    st.session_state.excel_bytes = None
+    st.session_state.no_encontrados = None
+    st.session_state.df_combinado = None
+    st.session_state.archivo_salida_nombre = None
+    st.session_state.text_lectora_solucion = None
+    st.session_state.text_lectora_lectura = None
+    st.session_state.df_studium_preview = None
+
 # Boton procesar
 if st.button("🚀 Procesar"):
 
@@ -72,38 +83,57 @@ if st.button("🚀 Procesar"):
     else:
         # Procesar ficheros
         # Previsualizar información .dat
-        st.write("### 👀 Previsualización de los ficheros .DAT")
         # Read text of the files in utf-8
         text_lectora_solucion = fichero_lectora_solucion.read().decode("utf-8")
         text_lectora_lectura = fichero_lectora_lectura.read().decode("utf-8")
-        # Display the text on text area
-        st.text_area("📄 Fichero solucion.DAT", text_lectora_solucion, height=200)
-        st.text_area("📄 Fichero lectura.DAT", text_lectora_lectura, height=200)
 
-        # Previsualizar información .xlsx en un dataframe
-        st.write("### 👀 Previsualización del fichero .xlsx de Studium")
-        # Read excel file
+        # Read excel file for preview
         df_studium = pd.read_excel(fichero_xlsx_studium)
-        # Display dataframe on streamlit
-        st.dataframe(df_studium, use_container_width=True)
 
         df_txt = leer_archivo_txt(fichero_lectora_txt, prefijo_columna)
         df_excel = leer_archivo_excel(fichero_xlsx_studium)
         df_dat = leer_y_procesar_fichero_DAT(fichero_lectora_lectura, fichero_lectora_solucion, num_preguntas, descuento, prefijo_columna, num_pregunta_inicio, num_pregunta_fin) # type: ignore
         df_combinado, no_encontrados = combinar_datos(df_txt, df_excel, df_dat, umbral, base_nota, prefijo_columna, num_preguntas)
-        
-        escribir_nuevo_excel(df_combinado, archivo_salida)
 
-        # Mostrar los alumnos no encontrados
-        st.write("### 🚫 Alumnos no encontrados")
-        if len(no_encontrados) > 0:
-            st.write("⚠️ Los siguientes alumnos no han sido encontrados:")
-            st.dataframe(no_encontrados)
-        else:
-            st.write("✅ Todos los alumnos han sido encontrados.")
+        # Reordenar columnas para poner Original Lectora y Nota final al principio
+        df_combinado = reordenar_columnas(df_combinado, prefijo_columna, base_nota)
 
-        # Mostrar el fichero de salida para descargar con streamlit
-        st.write("### 📥 Descargar fichero de salida")
-        st.write("Descarga tu fichero de salida abajo:")
-        with open(archivo_salida, 'rb') as f:
-            st.download_button('⬇️ Descargar fichero resultado', f, file_name=archivo_salida)  # Defaults to 'application/octet-stream'
+        # Generar bytes del Excel en memoria
+        excel_bytes = escribir_nuevo_excel_bytes(df_combinado)
+
+        # Guardar en session_state
+        st.session_state.resultado_procesado = True
+        st.session_state.excel_bytes = excel_bytes
+        st.session_state.no_encontrados = no_encontrados
+        st.session_state.df_combinado = df_combinado
+        st.session_state.archivo_salida_nombre = archivo_salida
+        st.session_state.text_lectora_solucion = text_lectora_solucion
+        st.session_state.text_lectora_lectura = text_lectora_lectura
+        st.session_state.df_studium_preview = df_studium
+
+# Mostrar resultados si ya se han procesado (persiste después de descargar)
+if st.session_state.resultado_procesado:
+    st.write("### 👀 Previsualización de los ficheros .DAT")
+    st.text_area("📄 Fichero solucion.DAT", st.session_state.text_lectora_solucion, height=200)
+    st.text_area("📄 Fichero lectura.DAT", st.session_state.text_lectora_lectura, height=200)
+
+    st.write("### 👀 Previsualización del fichero .xlsx de Studium")
+    st.dataframe(st.session_state.df_studium_preview, use_container_width=True)
+
+    # Mostrar los alumnos no encontrados
+    st.write("### 🚫 Alumnos no encontrados")
+    if len(st.session_state.no_encontrados) > 0:
+        st.write("⚠️ Los siguientes alumnos no han sido encontrados:")
+        st.dataframe(st.session_state.no_encontrados)
+    else:
+        st.write("✅ Todos los alumnos han sido encontrados.")
+
+    # Mostrar el fichero de salida para descargar con streamlit
+    st.write("### 📥 Descargar fichero de salida")
+    st.write("Descarga tu fichero de salida abajo:")
+    st.download_button(
+        '⬇️ Descargar fichero resultado',
+        st.session_state.excel_bytes,
+        file_name=st.session_state.archivo_salida_nombre,
+        mime='application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+    )
