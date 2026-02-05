@@ -4,8 +4,25 @@ from fuzzywuzzy import fuzz
 from openpyxl import load_workbook
 import io
 import re
+from datetime import datetime
 
-st.set_page_config(page_title="Studium Excel 2 Actas", page_icon="📝")
+st.set_page_config(page_title="Studium a Actas - Teacher Tools", page_icon="📋")
+
+# Sidebar footer
+current_year = datetime.now().year
+st.sidebar.markdown(
+    f"""
+    <div style="position: fixed; bottom: 0; left: 0; width: inherit; padding: 1rem; background: linear-gradient(to top, rgba(255,255,255,1) 80%, rgba(255,255,255,0)); text-align: center;">
+        <hr style="margin-bottom: 0.5rem;">
+        <p style="color: #666; font-size: 0.8rem; margin: 0;">
+            Creado con ❤️ por<br>
+            <strong>Álvaro Lozano Murciego</strong><br>
+            {current_year}
+        </p>
+    </div>
+    """,
+    unsafe_allow_html=True
+)
 
 # Inicializar session_state para persistir resultados
 if 'processing_done' not in st.session_state:
@@ -17,7 +34,7 @@ if 'match_details' not in st.session_state:
 if 'stats' not in st.session_state:
     st.session_state.stats = {'total': 0, 'matched': 0, 'not_matched': 0}
 
-st.title('Studium Excel 2 Actas')
+st.title('📋 Studium a Actas')
 st.write("""
 Esta herramienta permite cruzar datos entre dos archivos Excel:
 - **Excel de Studium (Moodle)**: archivo de origen con las notas

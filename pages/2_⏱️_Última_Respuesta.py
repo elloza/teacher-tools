@@ -1,15 +1,31 @@
 import streamlit as st
-
 import pandas as pd
 from io import BytesIO
+from datetime import datetime
 
-st.set_page_config(page_title = "Only last answer", page_icon = "📝")
+st.set_page_config(page_title="Última Respuesta - Teacher Tools", page_icon="⏱️")
+
+# Sidebar footer
+current_year = datetime.now().year
+st.sidebar.markdown(
+    f"""
+    <div style="position: fixed; bottom: 0; left: 0; width: inherit; padding: 1rem; background: linear-gradient(to top, rgba(255,255,255,1) 80%, rgba(255,255,255,0)); text-align: center;">
+        <hr style="margin-bottom: 0.5rem;">
+        <p style="color: #666; font-size: 0.8rem; margin: 0;">
+            Creado con ❤️ por<br>
+            <strong>Álvaro Lozano Murciego</strong><br>
+            {current_year}
+        </p>
+    </div>
+    """,
+    unsafe_allow_html=True
+)
 
 # Descripción en markdown de la página
 st.markdown("""
-# 📝 Only Last Answer
+# ⏱️ Última Respuesta
 
-¡Bienvenido a la herramienta **Only Last Answer**! 🎉
+¡Bienvenido a la herramienta **Última Respuesta**!
 
 ### ¿Qué hace esta herramienta?
 Esta aplicación te permite subir un archivo de Excel 📊 y procesarlo para obtener solo la última respuesta de cada identificador único. 

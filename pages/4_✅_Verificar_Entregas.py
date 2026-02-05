@@ -4,14 +4,32 @@ import zipfile
 import os
 from pathlib import Path
 from fuzzywuzzy import process
+from datetime import datetime
 
 # Configure max upload size to 5GB
 st.set_page_config(
-    page_title="Verificador de Entregas",
+    page_title="Verificar Entregas - Teacher Tools",
+    page_icon="✅",
     layout="wide",
     initial_sidebar_state="expanded",
 )
 st.config.set_option('server.maxUploadSize', 5120)
+
+# Sidebar footer
+current_year = datetime.now().year
+st.sidebar.markdown(
+    f"""
+    <div style="position: fixed; bottom: 0; left: 0; width: inherit; padding: 1rem; background: linear-gradient(to top, rgba(255,255,255,1) 80%, rgba(255,255,255,0)); text-align: center;">
+        <hr style="margin-bottom: 0.5rem;">
+        <p style="color: #666; font-size: 0.8rem; margin: 0;">
+            Creado con ❤️ por<br>
+            <strong>Álvaro Lozano Murciego</strong><br>
+            {current_year}
+        </p>
+    </div>
+    """,
+    unsafe_allow_html=True
+)
 
 def check_submissions(excel_file, zip_file, file_types, name_column, last_name_column, delivery_column='Entregado'):
     # Create tmp directory if it doesn't exist
@@ -78,7 +96,7 @@ def check_submissions(excel_file, zip_file, file_types, name_column, last_name_c
     
     return df
 
-st.title('🎯 ¡Verificador de Entregas!')
+st.title('✅ Verificar Entregas')
 
 # Widgets de carga
 excel_file = st.file_uploader("📚 Sube el Excel con la Lista de Estudiantes", type=["xlsx"])
