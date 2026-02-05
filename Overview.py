@@ -2,61 +2,82 @@ import streamlit as st
 import pandas as pd
 from fuzzywuzzy import process
 import re
- 
+from datetime import datetime
+
 def run():
     st.set_page_config(
-        page_title="Loza tools",
-        page_icon="📝",
+        page_title="Teacher Tools",
+        page_icon="🎓",
+        layout="wide"
     )
 
-    st.write("# Bienvenido a loza tools! 👋")
-    st.sidebar.success("Selecciona una de las herramientas.")
-    st.markdown(
-        """
-    """
+    # Sidebar con título
+    with st.sidebar:
+        st.markdown("""
+        <div style="text-align: center; padding: 1rem 0;">
+            <h1 style="color: #1E88E5; margin: 0;">🎓 Teacher Tools</h1>
+            <p style="color: #666; font-size: 0.9rem; margin-top: 0.5rem;">Herramientas para docentes</p>
+        </div>
+        <hr style="margin: 0.5rem 0 1rem 0;">
+        """, unsafe_allow_html=True)
+
+    st.write("# Bienvenido a Teacher Tools! 🎓")
+
+    # Footer en el sidebar (al final)
+    current_year = datetime.now().year
+    st.sidebar.markdown(
+        f"""
+        <div style="position: fixed; bottom: 0; left: 0; width: inherit; padding: 1rem; background: linear-gradient(to top, rgba(255,255,255,1) 80%, rgba(255,255,255,0)); text-align: center;">
+            <hr style="margin-bottom: 0.5rem;">
+            <p style="color: #666; font-size: 0.8rem; margin: 0;">
+                Creado con ❤️ por<br>
+                <strong>Álvaro Lozano Murciego</strong><br>
+                {current_year}
+            </p>
+        </div>
+        """,
+        unsafe_allow_html=True
     )
 
 
 if __name__ == "__main__":
-  run()
-  st.markdown(
-    """
-    Este sitio web está desarrollado con [stlite](https://stlite.net/) (una versión de streamlite que se ejecuta enteramente en tu navegador) 🖥️
+    run()
+    st.markdown(
+        """
+    Este sitio web está desarrollado con [stlite](https://stlite.net/) (una versión de Streamlit que se ejecuta enteramente en tu navegador) 🖥️
     por lo que puedes estar tranquilo de que tus datos no saldrán de tu pc y todo el procesamiento se hace en tu máquina. 🔒
 
     Además, si no te fías, aquí tienes el [repositorio de GitHub](https://github.com/elloza/teacher-tools) por si quieres revisar el código fuente y dejar una estrella de paso. ⭐
 
     ## Descripción de las herramientas disponibles:
 
-    ### 📝 Join Excel Files
-    Esta herramienta permite unir dos archivos de Excel en función de una columna común. 📊 
-    Puedes seleccionar las columnas de unión de cada archivo y descargar el archivo combinado. 📂
+    ### 📊 Unir Excels
+    Esta herramienta permite unir dos archivos de Excel en función de una columna común.
+    Puedes seleccionar las columnas de unión de cada archivo y descargar el archivo combinado.
 
-    ### 📝 Only Last Answer
-    Esta herramienta procesa un archivo de Excel para obtener solo la última respuesta de cada identificador único. ⏳ 
-    Puedes seleccionar la columna de identificación y la columna de tiempo para realizar el filtrado. 🕒
+    ### ⏱️ Última Respuesta
+    Esta herramienta procesa un archivo de Excel para obtener solo la última respuesta de cada identificador único.
+    Puedes seleccionar la columna de identificación y la columna de tiempo para realizar el filtrado.
 
-    ### 📝 Lectora to Studium Excel Tool
-    Esta herramienta convierte los datos de la lectora en un archivo de Excel compatible con Studium (Moodle). 📚 
-    Necesitarás subir varios archivos, incluyendo los resultados de la lectora y un archivo de Excel de Studium, 
-    y configurar los parámetros de corrección. ⚙️
+    ### 📚 Lectora a Studium
+    Esta herramienta convierte los datos de la lectora en un archivo de Excel compatible con Studium (Moodle).
+    Necesitarás subir varios archivos, incluyendo los resultados de la lectora y un archivo de Excel de Studium,
+    y configurar los parámetros de corrección.
 
-    ### 📝 Submission Verifier
-    Esta herramienta permite inspeccionar un fichero zip de entregas de Moodle junto con un listado de alumnos de Moodle
-    para comprobar si en sus entregas se incluye algún fichero con alguna de las extensiones especificadas. 📁 Se añade una columna
-    con un 1 si se ha encontrado algún fichero de alguno de los tipos introducidos y 0 en caso contrario. ✅❌
+    ### ✅ Verificar Entregas
+    Esta herramienta permite inspeccionar un fichero zip de entregas de Moodle junto con un listado de alumnos
+    para comprobar si en sus entregas se incluye algún fichero con alguna de las extensiones especificadas.
+    Se añade una columna con un 1 si se ha encontrado algún fichero y 0 en caso contrario.
 
-    ### 📝 Studium Scraper
-    Esta herramienta permite extraer la lista de participantes de un curso de Moodle en Studium y generar un informe como un timeline
-    de github a partir de sus registros de actividad. 📊
+    ### 📈 Scraper Studium
+    Esta herramienta permite extraer la lista de participantes de un curso de Moodle en Studium y generar
+    un informe como un timeline de GitHub a partir de sus registros de actividad.
+    Necesitarás introducir las cookies de sesión de Moodle y el ID del curso.
 
-    Necesitarás iniciar sesión con tu cuenta e introducir las cookies de sesión de Moodle y el ID del curso para extraer los participantes y sus registros. 🍪
-
-    ### 📝 Studium Excel 2 Actas
-    Esta herramienta permite cruzar datos entre dos archivos Excel: uno de Studium (Moodle) con las notas y otro de la aplicación de actas de la USAL. 📋
-
-    El cruce se realiza automáticamente por nombres y apellidos usando matching inteligente, y los datos se copian al Excel de actas manteniendo
-    su formato original (colores, fórmulas, etc.). ✨ Normalmente se usa para llevar las notas numéricas de Studium a las actas oficiales. 📊
+    ### 📋 Studium a Actas
+    Esta herramienta permite cruzar datos entre dos archivos Excel: uno de Studium (Moodle) con las notas
+    y otro de la aplicación de actas de la USAL.
+    El cruce se realiza automáticamente por nombres y apellidos usando matching inteligente.
 
     """
-  )
+    )

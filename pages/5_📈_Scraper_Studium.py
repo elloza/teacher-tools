@@ -11,11 +11,30 @@ import tempfile
 from utils.ScraperUtils import generate_contribution_chart, generate_pdf_report, download_participant_logs
 import zipfile
 import urllib3
+from datetime import datetime
+
+st.set_page_config(page_title="Scraper Studium - Teacher Tools", page_icon="📈")
+
+# Sidebar footer
+current_year = datetime.now().year
+st.sidebar.markdown(
+    f"""
+    <div style="position: fixed; bottom: 0; left: 0; width: inherit; padding: 1rem; background: linear-gradient(to top, rgba(255,255,255,1) 80%, rgba(255,255,255,0)); text-align: center;">
+        <hr style="margin-bottom: 0.5rem;">
+        <p style="color: #666; font-size: 0.8rem; margin: 0;">
+            Creado con ❤️ por<br>
+            <strong>Álvaro Lozano Murciego</strong><br>
+            {current_year}
+        </p>
+    </div>
+    """,
+    unsafe_allow_html=True
+)
 
 http = urllib3.PoolManager()
 
 # Título de la aplicación
-st.title("Scraper de Participantes y Registros - Studium Moodle")
+st.title("📈 Scraper Studium")
 
 # Aviso sobre limitaciones de CORS
 st.warning("⚠️ AVISO: Esta herramienta solo funciona en la versión desktop debido a limitaciones de CORS.")

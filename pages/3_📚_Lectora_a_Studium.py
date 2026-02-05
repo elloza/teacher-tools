@@ -1,12 +1,29 @@
 import streamlit as st
 import pandas as pd
+from datetime import datetime
 
 from utils.StudiumExcelToolUtils import combinar_datos, escribir_nuevo_excel_bytes, leer_archivo_excel, leer_archivo_txt, leer_y_procesar_fichero_DAT, reordenar_columnas
 
-st.set_page_config(page_title = "Lectora StudiumExcel", page_icon = "📝")
+st.set_page_config(page_title="Lectora a Studium - Teacher Tools", page_icon="📚")
+
+# Sidebar footer
+current_year = datetime.now().year
+st.sidebar.markdown(
+    f"""
+    <div style="position: fixed; bottom: 0; left: 0; width: inherit; padding: 1rem; background: linear-gradient(to top, rgba(255,255,255,1) 80%, rgba(255,255,255,0)); text-align: center;">
+        <hr style="margin-bottom: 0.5rem;">
+        <p style="color: #666; font-size: 0.8rem; margin: 0;">
+            Creado con ❤️ por<br>
+            <strong>Álvaro Lozano Murciego</strong><br>
+            {current_year}
+        </p>
+    </div>
+    """,
+    unsafe_allow_html=True
+)
 
 # Title of the page
-st.title("📝 Lectora to Studium Excel Tool")
+st.title("📚 Lectora a Studium")
 
 # Description of the page
 st.markdown('''
