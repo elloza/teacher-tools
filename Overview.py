@@ -27,12 +27,11 @@ def run():
     current_year = datetime.now().year
     st.sidebar.markdown(
         f"""
-        <div style="position: fixed; bottom: 0; left: 0; width: inherit; padding: 1rem; background: linear-gradient(to top, rgba(255,255,255,1) 80%, rgba(255,255,255,0)); text-align: center;">
-            <hr style="margin-bottom: 0.5rem;">
+        <div style="position: fixed; bottom: 0; left: 0; width: var(--sidebar-width, 21rem); padding: 0.75rem 1rem; background-color: inherit; text-align: center; border-top: 1px solid rgba(128,128,128,0.2);">
             <p style="color: #666; font-size: 0.8rem; margin: 0;">
-                Creado con ❤️ por<br>
-                <strong>Álvaro Lozano Murciego</strong><br>
-                {current_year}
+                Creado con ❤️ por
+                <strong>Álvaro Lozano Murciego</strong>
+                · {current_year}
             </p>
         </div>
         """,
