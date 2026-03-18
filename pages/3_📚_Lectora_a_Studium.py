@@ -1,5 +1,7 @@
 import streamlit as st
 import pandas as pd
+import matplotlib.pyplot as plt
+import numpy as np
 from datetime import datetime
 
 from utils.StudiumExcelToolUtils import combinar_datos, escribir_nuevo_excel_bytes, leer_archivo_excel, leer_archivo_txt, leer_y_procesar_fichero_DAT, reordenar_columnas
@@ -143,6 +145,94 @@ if st.session_state.resultado_procesado:
         st.dataframe(st.session_state.no_encontrados, use_container_width=True)
     else:
         st.write("✅ Todos los alumnos han sido encontrados.")
+
+    # Sección de análisis estadístico de las notas
+    st.write("### 📊 Análisis estadístico de las notas")
+
+    col_nota_final = f'{prefijo_columna}_Nota final B({base_nota})'
+    df_resultado = st.session_state.df_combinado
+
+    if col_nota_final in df_resultado.columns:
+        notas_todas = df_resultado[col_nota_final]
+        notas_validas = notas_todas.dropna()
+        num_no_presentados = int(notas_todas.isna().sum())
+        num_presentados = len(notas_validas)
+        num_total = len(notas_todas)
+
+        # Número de no presentados
+        st.write("#### 🚷 No presentados")
+        col_np1, col_np2, col_np3 = st.columns(3)
+        col_np1.metric("Total alumnos", num_total)
+        col_np2.metric("Presentados", num_presentados)
+        col_np3.metric("No presentados", num_no_presentados)
+
+        if num_presentados > 0:
+            # Estadísticas descriptivas
+            st.write("#### 📈 Estadísticas descriptivas")
+            media = notas_validas.mean()
+            mediana = notas_validas.median()
+            desv_std = notas_validas.std()
+            nota_min = notas_validas.min()
+            nota_max = notas_validas.max()
+            q1 = notas_validas.quantile(0.25)
+            q3 = notas_validas.quantile(0.75)
+
+            col_s1, col_s2, col_s3, col_s4 = st.columns(4)
+            col_s1.metric("Media", f"{media:.2f}")
+            col_s2.metric("Mediana", f"{mediana:.2f}")
+            col_s3.metric("Desv. estándar", f"{desv_std:.2f}")
+            col_s4.metric("Moda", f"{notas_validas.mode().iloc[0]:.2f}" if not notas_validas.mode().empty else "N/A")
+
+            col_s5, col_s6, col_s7, col_s8 = st.columns(4)
+            col_s5.metric("Mínimo", f"{nota_min:.2f}")
+            col_s6.metric("Máximo", f"{nota_max:.2f}")
+            col_s7.metric("Q1 (25%)", f"{q1:.2f}")
+            col_s8.metric("Q3 (75%)", f"{q3:.2f}")
+
+            num_aprobados = int((notas_validas >= base_nota * 0.5).sum())
+            num_suspensos = num_presentados - num_aprobados
+            tasa_aprobados = (num_aprobados / num_presentados) * 100
+
+            col_a1, col_a2, col_a3 = st.columns(3)
+            col_a1.metric("Aprobados (>= 50%)", num_aprobados)
+            col_a2.metric("Suspensos", num_suspensos)
+            col_a3.metric("Tasa de aprobados", f"{tasa_aprobados:.1f}%")
+
+            # Histograma
+            st.write("#### 📊 Histograma de notas")
+            fig_hist, ax_hist = plt.subplots(figsize=(10, 5))
+            bins = np.arange(0, base_nota + 0.5, 0.5) if base_nota <= 10 else 20
+            ax_hist.hist(notas_validas, bins=bins, edgecolor='black', alpha=0.7, color='#4CAF50')
+            ax_hist.set_xlabel('Nota')
+            ax_hist.set_ylabel('Número de alumnos')
+            ax_hist.set_title('Distribución de notas')
+            if base_nota <= 10:
+                ax_hist.set_xticks(np.arange(0, base_nota + 1, 1))
+            ax_hist.axvline(media, color='red', linestyle='--', linewidth=1.5, label=f'Media: {media:.2f}')
+            ax_hist.axvline(mediana, color='blue', linestyle='--', linewidth=1.5, label=f'Mediana: {mediana:.2f}')
+            ax_hist.legend()
+            ax_hist.grid(axis='y', alpha=0.3)
+            st.pyplot(fig_hist)
+
+            # Box plot (Whisker plot)
+            st.write("#### 📦 Diagrama de caja (Box & Whisker plot)")
+            fig_box, ax_box = plt.subplots(figsize=(10, 4))
+            bp = ax_box.boxplot(notas_validas, vert=False, patch_artist=True,
+                                boxprops=dict(facecolor='#81D4FA', edgecolor='black'),
+                                medianprops=dict(color='red', linewidth=2),
+                                whiskerprops=dict(color='black'),
+                                capprops=dict(color='black'),
+                                flierprops=dict(marker='o', markerfacecolor='red', markersize=6))
+            ax_box.set_xlabel('Nota')
+            ax_box.set_title('Distribución de notas - Box Plot')
+            if base_nota <= 10:
+                ax_box.set_xticks(np.arange(0, base_nota + 1, 1))
+            ax_box.grid(axis='x', alpha=0.3)
+            st.pyplot(fig_box)
+        else:
+            st.warning("No hay notas disponibles para generar estadísticas.")
+    else:
+        st.warning(f"No se encontró la columna de notas '{col_nota_final}' en los resultados.")
 
     # Mostrar el fichero de salida para descargar con streamlit
     st.write("### 📥 Descargar fichero de salida")
