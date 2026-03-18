@@ -55,7 +55,8 @@ def buscar_ids_similares(identificacion, lista_ids, top_n=3):
     matches = process.extract(identificacion, list(dictionary_ids.keys()), limit=top_n)
 
     resultados = []
-    for match_str, score, _ in matches:
+    for match in matches:
+        match_str, score = match[0], match[1]
         resultados.append((dictionary_ids[match_str], score))
     return resultados
 
