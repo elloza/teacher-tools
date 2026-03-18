@@ -1,5 +1,7 @@
 import streamlit as st
 import pandas as pd
+import matplotlib.pyplot as plt
+import numpy as np
 from datetime import datetime
 
 from utils.StudiumExcelToolUtils import combinar_datos, escribir_nuevo_excel_bytes, leer_archivo_excel, leer_archivo_txt, leer_y_procesar_fichero_DAT, reordenar_columnas
@@ -88,6 +90,8 @@ if 'resultado_procesado' not in st.session_state:
     st.session_state.text_lectora_solucion = None
     st.session_state.text_lectora_lectura = None
     st.session_state.df_studium_preview = None
+    st.session_state.prefijo_columna = None
+    st.session_state.base_nota = None
 
 # Boton procesar
 if st.button("🚀 Procesar"):
@@ -126,6 +130,8 @@ if st.button("🚀 Procesar"):
         st.session_state.text_lectora_solucion = text_lectora_solucion
         st.session_state.text_lectora_lectura = text_lectora_lectura
         st.session_state.df_studium_preview = df_studium
+        st.session_state.prefijo_columna = prefijo_columna
+        st.session_state.base_nota = base_nota
 
 # Mostrar resultados si ya se han procesado (persiste después de descargar)
 if st.session_state.resultado_procesado:
@@ -143,6 +149,75 @@ if st.session_state.resultado_procesado:
         st.dataframe(st.session_state.no_encontrados, use_container_width=True)
     else:
         st.write("✅ Todos los alumnos han sido encontrados.")
+
+    # Sección de análisis estadístico
+    st.write("### 📊 Análisis estadístico de resultados")
+
+    pref = st.session_state.prefijo_columna
+    bn = st.session_state.base_nota
+    col_nota_final = f'{pref}_Nota final B({bn})'
+    df_stats = st.session_state.df_combinado
+
+    # Separar presentados y no presentados
+    notas_presentados = df_stats[col_nota_final].dropna()
+    num_total = len(df_stats)
+    num_presentados = len(notas_presentados)
+    num_no_presentados = num_total - num_presentados
+
+    # Métricas principales
+    col1, col2, col3 = st.columns(3)
+    col1.metric("Total alumnos", num_total)
+    col2.metric("Presentados", num_presentados)
+    col3.metric("No presentados", num_no_presentados)
+
+    if num_presentados > 0:
+        # Estadísticas descriptivas
+        col_a, col_b, col_c, col_d = st.columns(4)
+        col_a.metric("Media", f"{notas_presentados.mean():.2f}")
+        col_b.metric("Mediana", f"{notas_presentados.median():.2f}")
+        col_c.metric("Desv. típica", f"{notas_presentados.std():.2f}")
+        col_d.metric("Nota máxima", f"{notas_presentados.max():.2f}")
+
+        col_e, col_f, col_g, col_h = st.columns(4)
+        col_e.metric("Nota mínima", f"{notas_presentados.min():.2f}")
+        col_f.metric("Q1 (25%)", f"{notas_presentados.quantile(0.25):.2f}")
+        col_g.metric("Q3 (75%)", f"{notas_presentados.quantile(0.75):.2f}")
+        aprobados = (notas_presentados >= bn * 0.5).sum()
+        col_h.metric("% Aprobados", f"{aprobados / num_presentados * 100:.1f}%")
+
+        # Histograma y Box plot lado a lado
+        fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(12, 5))
+
+        # Histograma
+        bins = np.arange(0, bn + 0.5, 0.5)
+        ax1.hist(notas_presentados, bins=bins, edgecolor='black', alpha=0.7, color='#4CAF50')
+        ax1.axvline(notas_presentados.mean(), color='red', linestyle='--', linewidth=1.5, label=f'Media: {notas_presentados.mean():.2f}')
+        ax1.axvline(notas_presentados.median(), color='blue', linestyle='--', linewidth=1.5, label=f'Mediana: {notas_presentados.median():.2f}')
+        ax1.axvline(bn * 0.5, color='orange', linestyle=':', linewidth=1.5, label=f'Aprobado: {bn * 0.5:.1f}')
+        ax1.set_xlabel(f'Nota (base {bn})')
+        ax1.set_ylabel('Frecuencia')
+        ax1.set_title('Distribución de notas')
+        ax1.legend(fontsize=8)
+        ax1.set_xlim(0, bn)
+
+        # Box plot (whisker plot)
+        bp = ax2.boxplot(notas_presentados, vert=True, patch_artist=True,
+                         boxprops=dict(facecolor='#81D4FA', edgecolor='black'),
+                         medianprops=dict(color='red', linewidth=2),
+                         whiskerprops=dict(color='black'),
+                         capprops=dict(color='black'),
+                         flierprops=dict(marker='o', markerfacecolor='red', markersize=6))
+        ax2.axhline(bn * 0.5, color='orange', linestyle=':', linewidth=1.5, label=f'Aprobado: {bn * 0.5:.1f}')
+        ax2.set_ylabel(f'Nota (base {bn})')
+        ax2.set_title('Diagrama de caja (Whisker plot)')
+        ax2.set_xticklabels(['Notas'])
+        ax2.legend(fontsize=8)
+        ax2.set_ylim(0, bn)
+
+        fig.tight_layout()
+        st.pyplot(fig)
+    else:
+        st.write("No hay alumnos presentados para mostrar estadísticas.")
 
     # Mostrar el fichero de salida para descargar con streamlit
     st.write("### 📥 Descargar fichero de salida")
