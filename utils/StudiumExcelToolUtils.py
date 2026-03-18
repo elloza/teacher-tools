@@ -131,26 +131,32 @@ def combinar_datos(df_txt, df_excel, df_dat, umbral, base_nota, prefijo_columna,
 
     return df_combinado, df_no_encontrados
 
-# Función para reordenar columnas poniendo Original Lectora y Nota final al principio
+# Función para reordenar columnas poniendo Original Lectora y Nota final después de "Ultima descarga de este curso"
 def reordenar_columnas(df, prefijo_columna, base_nota):
-    # Identificar las columnas clave que queremos al principio
     col_original_lectora = f'{prefijo_columna}_TEST_Original_Lectora'
     col_nota_final = f'{prefijo_columna}_Nota final B({base_nota})'
 
-    # Obtener lista de columnas actuales
     columnas = list(df.columns)
 
     # Identificar columnas a mover
-    columnas_prioritarias = []
+    columnas_a_mover = []
     if col_original_lectora in columnas:
-        columnas_prioritarias.append(col_original_lectora)
+        columnas_a_mover.append(col_original_lectora)
         columnas.remove(col_original_lectora)
     if col_nota_final in columnas:
-        columnas_prioritarias.append(col_nota_final)
+        columnas_a_mover.append(col_nota_final)
         columnas.remove(col_nota_final)
 
-    # Nuevo orden: columnas prioritarias al principio, luego el resto
-    nuevo_orden = columnas_prioritarias + columnas
+    if not columnas_a_mover:
+        return df
+
+    # Insertar después de "Ultima descarga de este curso" si existe, sino al principio
+    col_ultima_descarga = 'Ultima descarga de este curso'
+    if col_ultima_descarga in columnas:
+        pos = columnas.index(col_ultima_descarga) + 1
+        nuevo_orden = columnas[:pos] + columnas_a_mover + columnas[pos:]
+    else:
+        nuevo_orden = columnas_a_mover + columnas
 
     return df[nuevo_orden]
 
