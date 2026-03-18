@@ -45,6 +45,20 @@ def comparar_identificaciones(identificacion, lista_ids, umbral):
     else:
         return None
 
+# Función para buscar los IDs más similares (para sugerencias de no encontrados)
+def buscar_ids_similares(identificacion, lista_ids, top_n=3):
+    dictionary_ids = {}
+    for id in lista_ids:
+        new_identifier = re.sub(r'\D', '', id).lower()
+        dictionary_ids[new_identifier] = id
+
+    matches = process.extract(identificacion, list(dictionary_ids.keys()), limit=top_n)
+
+    resultados = []
+    for match_str, score, _ in matches:
+        resultados.append((dictionary_ids[match_str], score))
+    return resultados
+
 # Función para leer y procesar el fichero DAT
 def leer_y_procesar_fichero_DAT(uploaded_file_lecturas,uploaded_file_soluciones, num_preguntas=10, descuento=0.33, prefijo_columna="Test", num_pregunta_inicio=1, num_pregunta_fin=10):
     datos = []
@@ -94,30 +108,54 @@ def combinar_datos(df_txt, df_excel, df_dat, umbral, base_nota, prefijo_columna,
 
     # Normalizar el campo [f'{prefijo_columna}_Identificacion'] para que tenga 9 dígitos y una letra
     df_excel['Número de ID'] = df_excel['Número de ID'].apply(lambda x: x[:-1].zfill(9) + x[-1] if len(x) < 10 else x)
-    
+
+    # Detectar columnas de nombre y apellidos en el Excel de Studium
+    col_nombre = None
+    col_apellidos = None
+    for col in df_excel.columns:
+        col_lower = col.lower().strip()
+        if col_lower == 'nombre':
+            col_nombre = col
+        elif col_lower in ('apellido', 'apellidos', 'apellido(s)'):
+            col_apellidos = col
+
     # Df no encontrados
     no_encontrados = []
 
     df_txt[f'{prefijo_columna}_Nota'] = df_txt[f'{prefijo_columna}_Nota'].astype(float)
 
+    lista_ids_studium = df_excel['Número de ID'].tolist()
 
     for idx, row in df_txt.iterrows():
         identificacion = row[f'{prefijo_columna}_Identificacion']
         nota = row[f'{prefijo_columna}_Nota']
-        id_similar = comparar_identificaciones(identificacion, df_excel['Número de ID'].tolist(), umbral)
+        id_similar = comparar_identificaciones(identificacion, lista_ids_studium, umbral)
 
         if id_similar:
             df_excel.loc[df_excel['Número de ID'] == id_similar, f'{prefijo_columna}_TEST_Original_Lectora'] = nota
             # Search in df_dat in DNI colum identificacion and substitute with id_similar
             df_dat.loc[df_dat[f'{prefijo_columna}_DNI'] == identificacion, f'{prefijo_columna}_DNI'] = id_similar
         else:
-            # Añadir a no encontrados entrada para crear luego un dataframe
-            row[f'{prefijo_columna}_Identificacion'] = identificacion
-            row[f'{prefijo_columna}_Nota'] = nota
+            # Buscar los IDs más similares como sugerencia
+            sugerencias = buscar_ids_similares(identificacion, lista_ids_studium, top_n=3)
 
-            no_encontrados.append(row)
+            entrada = {
+                f'{prefijo_columna}_Identificacion': identificacion,
+                f'{prefijo_columna}_Nota': nota,
+            }
 
-    df_no_encontrados = pd.DataFrame(no_encontrados, columns=[f'{prefijo_columna}_Identificacion', f'{prefijo_columna}_Nota'])
+            for i, (sug_id, sug_score) in enumerate(sugerencias, 1):
+                fila_sug = df_excel[df_excel['Número de ID'] == sug_id]
+                nombre = fila_sug[col_nombre].values[0] if col_nombre and len(fila_sug) > 0 else ''
+                apellidos = fila_sug[col_apellidos].values[0] if col_apellidos and len(fila_sug) > 0 else ''
+                entrada[f'Sugerencia {i} - ID'] = sug_id
+                entrada[f'Sugerencia {i} - Nombre'] = nombre
+                entrada[f'Sugerencia {i} - Apellidos'] = apellidos
+                entrada[f'Sugerencia {i} - Similitud'] = f'{sug_score}%'
+
+            no_encontrados.append(entrada)
+
+    df_no_encontrados = pd.DataFrame(no_encontrados)
     df_combinado = pd.merge(df_excel, df_dat, left_on='Número de ID', right_on=f'{prefijo_columna}_DNI', how='left')
 
     # Calcular nota final de tal manera que este en la base indicada por base_nota y teniendo el numero de preguntas

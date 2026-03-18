@@ -139,8 +139,8 @@ if st.session_state.resultado_procesado:
     # Mostrar los alumnos no encontrados
     st.write("### 🚫 Alumnos no encontrados")
     if len(st.session_state.no_encontrados) > 0:
-        st.write("⚠️ Los siguientes alumnos no han sido encontrados:")
-        st.dataframe(st.session_state.no_encontrados)
+        st.write("⚠️ Los siguientes alumnos no han sido encontrados. Se muestran sugerencias de alumnos con ID similar para facilitar la identificación:")
+        st.dataframe(st.session_state.no_encontrados, use_container_width=True)
     else:
         st.write("✅ Todos los alumnos han sido encontrados.")
 
