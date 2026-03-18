@@ -60,12 +60,16 @@ def leer_y_procesar_fichero_DAT(uploaded_file_lecturas,uploaded_file_soluciones,
     num_preguntas_rango = num_pregunta_fin - num_pregunta_inicio + 1
 
     for linea in lineas_sol:
+        if len(linea.strip()) == 0 or linea[14:17].strip() == '':
+            continue
         soluciones_test[int(linea[14:17])] = [int(linea[i]) for i in range(inicio_pos, fin_pos)]
 
     stringio = StringIO(uploaded_file_lecturas.getvalue().decode('utf-8'))
     lineas_lecturas = stringio.readlines()
-    
+
     for linea in lineas_lecturas:
+        if len(linea.strip()) == 0 or linea[14:17].strip() == '':
+            continue
         dni = linea[6:14]
         dni = dni.zfill(9)
         opcion = int(linea[14:17])
