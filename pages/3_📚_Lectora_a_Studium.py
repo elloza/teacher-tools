@@ -90,6 +90,7 @@ if 'resultado_procesado' not in st.session_state:
     st.session_state.text_lectora_solucion = None
     st.session_state.text_lectora_lectura = None
     st.session_state.df_studium_preview = None
+    st.session_state.num_registros_dat = None
 
 # Boton procesar
 if st.button("🚀 Procesar"):
@@ -128,6 +129,7 @@ if st.button("🚀 Procesar"):
         st.session_state.text_lectora_solucion = text_lectora_solucion
         st.session_state.text_lectora_lectura = text_lectora_lectura
         st.session_state.df_studium_preview = df_studium
+        st.session_state.num_registros_dat = len(df_dat)
 
 # Mostrar resultados si ya se han procesado (persiste después de descargar)
 if st.session_state.resultado_procesado:
@@ -153,20 +155,22 @@ if st.session_state.resultado_procesado:
     df_resultado = st.session_state.df_combinado
 
     if col_nota_final in df_resultado.columns:
-        notas_todas = df_resultado[col_nota_final]
-        notas_validas = notas_todas.dropna()
-        num_no_presentados = int(notas_todas.isna().sum())
-        num_presentados = len(notas_validas)
-        num_total = len(notas_todas)
+        notas_validas = df_resultado[col_nota_final].dropna()
+        # Presentados = registros en la lectora (.DAT)
+        num_presentados = st.session_state.num_registros_dat
+        # Total alumnos = registros en el Excel de Studium
+        num_total = len(df_resultado)
+        # No presentados = alumnos de Studium que no pasaron por la lectora
+        num_no_presentados = num_total - num_presentados
 
         # Número de no presentados
         st.write("#### 🚷 No presentados")
         col_np1, col_np2, col_np3 = st.columns(3)
-        col_np1.metric("Total alumnos", num_total)
-        col_np2.metric("Presentados", num_presentados)
+        col_np1.metric("Total alumnos (Studium)", num_total)
+        col_np2.metric("Presentados (Lectora)", num_presentados)
         col_np3.metric("No presentados", num_no_presentados)
 
-        if num_presentados > 0:
+        if len(notas_validas) > 0:
             # Estadísticas descriptivas
             st.write("#### 📈 Estadísticas descriptivas")
             media = notas_validas.mean()
